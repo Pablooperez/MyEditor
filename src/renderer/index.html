@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyEditor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: { colors: { editorBg: '#1e1e2e', sidebarBg: '#181825', accent: '#89b4fa', statusBg: '#11111b' } }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #181825; }
+        ::-webkit-scrollbar-thumb { background: #45475a; border-radius: 4px; }
+        body.theme-dark { background-color: #090d16; color: #e2e8f0; }
+        body.theme-light { background-color: #f8fafc; color: #1e293b; }
+        .tab-active { background-color: #1e1e2e; border-top: 2px solid #89b4fa; color: white; }
+    </style>
+</head>
+<body class="bg-slate-950 text-gray-200 h-full select-none flex flex-col theme-dark" id="mainBody">
+    <header class="bg-slate-900 border-b border-slate-800 p-2 flex justify-between items-center z-50">
+        <div class="flex items-center gap-3 px-2">
+            <i class="fa-solid fa-code text-accent"></i>
+            <h1 class="font-bold text-white text-sm">MyEditor</h1>
+        </div>
+    </header>
+
+    <main id="mainContainer" class="flex-1 overflow-hidden relative">
+        <div id="view-p1" class="absolute inset-0 flex">
+            <aside class="w-[200px] bg-sidebarBg border-r border-gray-800 p-3 flex flex-col gap-1">
+                <button onclick="setView('p1')" class="w-full text-left p-2 text-accent bg-accent/10 rounded text-sm flex items-center gap-2"><i class="fa-solid fa-folder-open w-4"></i>Archivos</button>
+                <button onclick="setView('p2')" class="w-full text-left p-2 text-gray-400 hover:text-white rounded text-sm flex items-center gap-2"><i class="fa-solid fa-gear w-4"></i>Configuración</button>
+            </aside>
+            <div class="flex-1 p-8 overflow-y-auto flex flex-col items-center">
+                <div class="w-full max-w-xl">
+                    <h2 class="text-xl font-bold text-white mb-6 text-left">¡Hola de nuevo!</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <button onclick="nuevoDocumento()" class="p-4 bg-gray-800/40 hover:bg-gray-800/80 border border-gray-700/60 rounded-xl flex flex-col items-start gap-1 transition-all text-left">
+                            <i class="fa-solid fa-file-circle-plus text-blue-400 text-lg mb-1"></i>
+                            <span class="font-semibold text-white text-sm">Nuevo Documento</span>
+                            <span class="text-xs text-gray-400">Crear archivo en blanco</span>
+                        </button>
+                        <button onclick="solicitarAperturaArchivo()" class="p-4 bg-gray-800/40 hover:bg-gray-800/80 border border-gray-700/60 rounded-xl flex flex-col items-start gap-1 transition-all text-left">
+                            <i class="fa-solid fa-folder-open text-emerald-400 text-lg mb-1"></i>
+                            <span class="font-semibold text-white text-sm">Abrir Archivo</span>
+                            <span class="text-xs text-gray-400">Explorar archivos locales</span>
+                        </button>
+                    </div>
+                    <div class="w-full">
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <i class="fa-regular fa-clock"></i> Recientes
+                        </div>
+                        <div id="recentFilesList" class="space-y-2">
+                            <div class="text-xs text-gray-500 italic p-2">No hay archivos recientes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-p2" class="absolute inset-0 flex hidden">
+            <aside class="w-[200px] bg-sidebarBg border-r border-gray-800 p-3 flex flex-col gap-1">
+                <button onclick="setView('p1')" class="w-full text-left p-2 text-gray-400 hover:text-white rounded text-sm flex items-center gap-2"><i class="fa-solid fa-folder-open w-4"></i>Archivos</button>
+                <button onclick="setView('p2')" class="w-full text-left p-2 text-accent bg-accent/10 rounded text-sm flex items-center gap-2"><i class="fa-solid fa-gear w-4"></i>Configuración</button>
+            </aside>
+            <div class="flex-1 p-8 overflow-y-auto flex flex-col items-center">
+                <div class="w-full max-w-xl">
+                    <h2 class="text-xl font-bold text-white mb-6 text-left">Configuración del Editor</h2>
+                    <div class="bg-gray-800/30 p-4 rounded-lg border border-gray-800 space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-accent mb-2">Tema Visual Global</label>
+                            <select onchange="document.getElementById('mainBody').className = `bg-slate-950 text-gray-200 h-full select-none flex flex-col theme-${this.value}`" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-gray-300 focus:outline-none focus:border-accent">
+                                <option value="dark">Dark Theme (Por defecto)</option>
+                                <option value="light">Light Theme</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-p3" class="absolute inset-0 flex flex-col hidden">
+            <!-- Barra superior del Editor con Controles de Tipografía y Tamaño -->
+            <div class="bg-sidebarBg flex items-center justify-between border-b border-gray-800 text-xs font-mono px-2 py-1">
+                <div class="flex items-center gap-3">
+                    <button onclick="setView('p1')" class="px-3 py-1.5 text-gray-400 hover:text-white hover:bg-gray-800 border-r border-gray-800 transition-colors" title="Volver a Inicio">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <div class="px-3 py-1.5 tab-active border-r border-gray-800 flex items-center gap-2 cursor-default">
+                        <i class="fa-solid fa-file-lines text-gray-400"></i> <span id="editor-tab-name">sin_titulo.txt</span>
+                    </div>
+
+                    <!-- Controles rápidos de Fuente y Tamaño -->
+                    <div class="flex items-center gap-3 ml-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] text-gray-400">Fuente:</span>
+                            <select id="fontFamilySelect" onchange="cambiarTipografia()" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-accent">
+                                <option value="JetBrains Mono, monospace">JetBrains Mono</option>
+                                <option value="Fira Code, monospace">Fira Code</option>
+                                <option value="Courier New, monospace">Courier New</option>
+                                <option value="Consolas, monospace">Consolas</option>
+                                <option value="sans-serif">Sans-Serif</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] text-gray-400">Tamaño:</span>
+                            <select id="fontSizeSelect" onchange="cambiarTamanoFuente()" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-accent">
+                                <option value="12px">12px</option>
+                                <option value="14px" selected>14px</option>
+                                <option value="16px">16px</option>
+                                <option value="18px">18px</option>
+                                <option value="20px">20px</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="solicitarGuardadoArchivo()" class="px-3 py-1 bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30 rounded flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar
+                </button>
+            </div>
+            
+            <div class="flex-1 flex overflow-hidden relative">
+                <div id="bubbleMenu" class="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 shadow-xl rounded-lg px-2.5 py-1.5 flex items-center gap-2 text-xs text-gray-200 z-30 hidden">
+                    <button onclick="formatText('bold')" class="hover:text-accent p-1" title="Negrita"><i class="fa-solid fa-bold"></i></button>
+                    <button onclick="formatText('italic')" class="hover:text-accent p-1" title="Cursiva"><i class="fa-solid fa-italic"></i></button>
+                    <button onclick="formatText('underline')" class="hover:text-accent p-1" title="Subrayado"><i class="fa-solid fa-underline"></i></button>
+                    <span class="text-gray-600">|</span>
+                    <button onclick="hideBubbleMenu()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="lineNumbers" class="w-12 bg-sidebarBg/40 text-right pr-3 py-4 text-gray-600 font-mono text-sm border-r border-gray-800/50 leading-6 select-none overflow-hidden">1</div>
+                <div id="editorContentArea" class="flex-1 bg-editorBg text-gray-200 p-4 font-mono text-sm overflow-y-auto focus:outline-none leading-6 whitespace-pre-wrap" contenteditable="true" spellcheck="false" onmouseup="checkTextSelection(event)"></div>
+            </div>
+            
+            <footer class="h-7 bg-statusBg flex items-center justify-between px-4 text-[11px] text-gray-400 border-t border-gray-800 font-mono">
+                <div class="flex items-center gap-3">
+                    <span id="editor-status-name" class="text-white">sin_titulo.txt</span>
+                    <span>|</span><span>Modificado</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="statusCursor">Editor Enriquecido</span>
+                    <span>|</span><span id="editor-status-encoding">UTF-8</span>
+                </div>
+            </footer>
+        </div>
+    </main>
+    <script src="./renderer.js"></script>
+</body>
+</html>
